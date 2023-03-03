@@ -1,0 +1,5 @@
+# ignore specific files
+.git
+test.txt
+PMF.png
+time_energy.txt

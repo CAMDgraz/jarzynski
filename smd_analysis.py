@@ -60,32 +60,30 @@ def parse_arguments():
     # -- Arguments: Output ----------------------------------------------------
     output = parser.add_argument_group(title='Output options')
     output.add_argument('-out', dest='output', action='store',
-                        help='Output directory (default: out/)', type=str,
-                        required=False, default='out')
+                        help='Output directory (default: ./)', type=str,
+                        required=False, default='./')
 
     args = parser.parse_args()
     return args, parser
 
 
-def generic_matplotlib():
+def general_canvas(figsize, dpi):
     """
-    Customize the graphs.
+    Customization of plots
 
     Returns:
-        None.
-
+        None
     """
-    mpl.rc('figure', figsize=[12, 8], dpi=300)
-    mpl.rc('xtick', direction='in', top=True)
-    mpl.rc('xtick.major', top=False, )
-    mpl.rc('xtick.minor', top=True, visible=True)
+    mpl.rc('figure', figsize=figsize, dpi=dpi)
+    mpl.rc('xtick', direction='in', top=False)
+    mpl.rc('xtick.major', top=False)
+    mpl.rc('xtick.minor', top=False)
     mpl.rc('ytick', direction='in', right=True)
-    mpl.rc('ytick.major', right=True, )
-    mpl.rc('ytick.minor', right=True, visible=True)
-
+    mpl.rc('ytick.major', right= False)
+    mpl.rc('ytick.minor', right=False)
     mpl.rc('axes', labelsize=20)
-    plt.rcParams['axes.autolimit_mode'] = 'round_numbers'
-    mpl.rc('lines', linewidth=2, color='k')
+    plt.rcParams['axes.autolimit_mode'] = 'data'
+    mpl.rc('lines', linewidth=2)
     mpl.rc('font', family='monospace', size=20)
     mpl.rc('grid', alpha=0.5, color='gray', linewidth=1, linestyle='--')
 
@@ -232,7 +230,19 @@ def check_jobs(jobs, time, time_step):
     return incomplete_jobs
 
 
-def main(args): #noqa: C901
+if __name__ == '__main__':
+    args, parser = parse_arguments()
+    # =========================================================================
+    # Checking args
+    # =========================================================================
+    if (args.jobs_list is not None) and (args.file_extension is not None):
+        print('\n\n>>> WARNING !!!')
+        print('Both, jobs list and extension provided, jobs list will be used')
+    elif (args.jobs_list is None) and (args.file_extension is None):
+        print('\n\n>>> Fatal Error !!!: ' +
+              'Neither jobs list nor extension provided')
+        parser.print_help()
+        exit()
 
     # -- general variables ----------------------------------------------------
 
@@ -241,9 +251,7 @@ def main(args): #noqa: C901
     time_vect = np.arange(0, args.time, args.time_step)
     length_QMMM = len(time_vect)
 
-    # =========================================================================
-    # Reading input
-    # =========================================================================
+    # -- Reading input --------------------------------------------------------
     if args.jobs_list is not None:
         print('** Reading jobs from {} list\n'.format(args.jobs_list))
         with open(args.jobs_list, 'r') as inp:
@@ -303,18 +311,26 @@ def main(args): #noqa: C901
     # =========================================================================
     # Plotting and saving results
     # =========================================================================
-    try:
-        os.mkdir(args.output)
-    except FileExistsError:
-        raise Exception('{} directory exists.'.format(args.output) +
-                        'Specifx another location or rename it')
-    generic_matplotlib()
+    if args.output != './':
+        try:
+            os.mkdir(args.output)
+        except FileExistsError:
+            raise Exception('{} directory exists.'.format(args.output) +
+                            'Specifx another location or rename it')
+
+    general_canvas([12, 8], 300)
     fig, ax = plt.subplots()
+
+    ax.xaxis.set_major_locator(mpl.ticker.MultipleLocator(0.25))
+    ax.xaxis.set_minor_locator(mpl.ticker.MultipleLocator(0.125))
+    ax.yaxis.set_major_locator(mpl.ticker.MultipleLocator(10))
+    ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(5))
+
+    ax.xaxis.set_major_formatter(mpl.ticker.StrMethodFormatter('{x:.2f}'))
 
     ax.set_xlabel(r'Time $(ps)$')
     ax.set_ylabel(r'PMF $(kcal mol^{-1})$')
     ax.set_xlim(0, args.time)
-    ax.yaxis.get_major_ticks()[0].label1.set_visible(False)
 
     for work_vect in pulling_works:
         ax.plot(time_vect, work_vect, alpha=0.2)
@@ -329,19 +345,3 @@ def main(args): #noqa: C901
             out.write('{:>8.2f}  {:>17.4f}  {:>13.4f}\n'.format(t, w, e))
 
     print('** Done!!!')
-
-
-if __name__ == '__main__':
-    args, parser = parse_arguments()
-    # =========================================================================
-    # Checking args
-    # =========================================================================
-    if (args.jobs_list is not None) and (args.file_extension is not None):
-        print('\n\n>>> WARNING !!!')
-        print('Both, jobs list and extension provided, jobs list will be used')
-    elif (args.jobs_list is None) and (args.file_extension is None):
-        print('\n\n>>> Fatal Error !!!: ' +
-              'Neither jobs list nor extension provided')
-        parser.print_help()
-        exit()
-    main(args)
