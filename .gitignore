@@ -1,7 +1,6 @@
 # ignore specific files
 .git
 .gitignore
-test.txt
 *.png
 time_energy.txt
 TODO
