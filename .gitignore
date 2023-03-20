@@ -1,5 +1,7 @@
 # ignore specific files
 .git
+.gitignore
 test.txt
-PMF.png
+*.png
 time_energy.txt
+TODO

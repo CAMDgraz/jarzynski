@@ -149,10 +149,11 @@ def cumulant_expansion(works, time_vect, njobs, T, kb):
             Array containing the average work for each time step
 
     """
+    M = np.shape(works)[0]
     mean = np.mean(works, axis=0)                                   # <W>
     beta = 1/(kb*T)                                                 # ß
     mean_cuad = np.mean(works**2, axis=0)                           # <W^2>
-    energy = mean - (beta/2)*(mean_cuad - mean**2)                  # F
+    energy = mean - (beta/2)*(M/(M-1))*(mean_cuad - mean**2)        # F
 
     avg_work = np.zeros(len(time_vect))
     for work_vect in works:
@@ -329,19 +330,19 @@ if __name__ == '__main__':
     ax.xaxis.set_major_formatter(mpl.ticker.StrMethodFormatter('{x:.2f}'))
 
     ax.set_xlabel(r'Time $(ps)$')
-    ax.set_ylabel(r'PMF $(kcal mol^{-1})$')
+    ax.set_ylabel(r'Free Energy $(kcal\ mol^{-1})$')
     ax.set_xlim(0, args.time)
 
     for work_vect in pulling_works:
         ax.plot(time_vect, work_vect, alpha=0.2)
     ax.plot(time_vect, energy, color='black')
 
-    fig.savefig('{}/PMF.png'.format(args.output))
+    fig.savefig('{}/FE.png'.format(args.output))
     plt.close(fig)
 
     with open('{}/time_energy.txt'.format(args.output), 'w') as out:
-        out.write('Time(ps)  AvgWork(kcal/mol)  PMF(kcal/mol)\n')
+        out.write('Time(ps)  AvgWork(kcal/mol)  Free_Energy(kcal/mol)\n')
         for t, w, e in zip(time_vect, avg_work, energy):
-            out.write('{:>8.2f}  {:>17.4f}  {:>13.4f}\n'.format(t, w, e))
+            out.write('{:>8.2f}  {:>17.4f}  {:>21.4f}\n'.format(t, w, e))
 
     print('** Done!!!')
