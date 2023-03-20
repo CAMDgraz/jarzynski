@@ -41,4 +41,4 @@ In the example folder you can run:
 or 
 `python ../smd_analysis.py -ext dat`
 
-Please check the format of the jobs_list file and the smd result files
+Please check the format of the jobs_list (./example/test.txt) file and the smd result files
